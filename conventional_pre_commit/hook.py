@@ -2,6 +2,7 @@ import argparse
 import sys
 
 from conventional_pre_commit import format
+import subprocess
 
 RESULT_SUCCESS = 0
 RESULT_FAIL = 1
@@ -56,7 +57,30 @@ See {Colors.LBLUE}https://git-scm.com/docs/git-commit/#_discussion{Colors.RESTOR
         if format.has_autosquash_prefix(message):
             return RESULT_SUCCESS
 
-    if format.is_conventional(message, args.types, args.optional_scope):
+    is_valid, scope = format.is_conventional(message, args.types, args.optional_scope)
+    print(is_valid, scope)
+    if is_valid:
+        # Check that scope is valid by running `pants list <scope>`
+        if scope:
+            cmd = ["pants", "list", scope]
+            try:
+                result = subprocess.run(cmd)
+            except FileNotFoundError:
+                print(f"""
+        {Colors.LRED}[Error] >>{Colors.RESTORE} Pants binary was not found, are you sure it's installed and in PATH?""")
+                return RESULT_FAIL
+            # Get the exit code
+            exit_code = result.returncode
+            if exit_code != 0:
+                print(
+                    f"""
+        {Colors.YELLOW}[WARNING] >>{Colors.RESTORE} The scope `{Colors.LRED}{scope}{Colors.RESTORE}` doesn't seem to be a valid `pants list` scope.
+
+Are you sure that you want to continue ? [y/N]""")
+                user_input = input()
+                if user_input.lower() != "y":
+                    print("Aborting commit...")
+                    return RESULT_FAIL
         return RESULT_SUCCESS
     else:
         print(

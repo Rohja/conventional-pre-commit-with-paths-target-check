@@ -29,9 +29,9 @@ def r_types(types):
 def r_scope(optional=True):
     """Regex str for an optional (scope)."""
     if optional:
-        return r"(\([\w \/:,-]+\))?"
+        return r"(\((?P<scope>[\w \/:,-]+)\))?"
     else:
-        return r"(\([\w \/:,-]+\))"
+        return r"(\((?P<scope>[\w \/:,-]+)\))"
 
 
 def r_delim():
@@ -83,9 +83,11 @@ def is_conventional(input, types=DEFAULT_TYPES, optional_scope=True):
     regex = re.compile(pattern, re.MULTILINE)
 
     result = regex.match(input)
-    is_valid = bool(result)
+    scope = result.group("scope")
+
+    is_valid = (bool(result), scope)
     if is_valid and result.group("multi") and not result.group("sep"):
-        is_valid = False
+        is_valid = (False, scope)
 
     return is_valid
 
