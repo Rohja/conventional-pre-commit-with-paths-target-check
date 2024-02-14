@@ -19,9 +19,7 @@ def main(argv=[]):
         prog="conventional-pre-commit", description="Check a git commit message for Conventional Commits formatting."
     )
     parser.add_argument("types", type=str, nargs="*", default=format.DEFAULT_TYPES, help="Optional list of types to support")
-    parser.add_argument(
-        "--extra-scopes", type=str, nargs="*", default=[], dest="extra_allowed_scopes", help="Optional list of extra scope to allow (that are not pants targets)"
-    )
+    parser.add_argument('--extra-scopes', nargs='+', default=[], help='Extra scopes to allow in commit messages that are not pants target')
     parser.add_argument("input", type=str, help="A file containing a git commit message")
     parser.add_argument(
         "--force-scope", action="store_false", default=True, dest="optional_scope", help="Force commit to have scope defined."
@@ -64,7 +62,7 @@ See {Colors.LBLUE}https://git-scm.com/docs/git-commit/#_discussion{Colors.RESTOR
         # Check that scope is valid by running `pants list <scope>`
         if scope:
             is_valid_scope = False
-            if scope in args.extra_allowed_scopes:
+            if scope in args.extra_scopes:
                 is_valid_scope = True
             else:
                 # Check if the scope is a valid pants target
