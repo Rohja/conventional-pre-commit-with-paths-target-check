@@ -60,7 +60,6 @@ See {Colors.LBLUE}https://git-scm.com/docs/git-commit/#_discussion{Colors.RESTOR
     is_valid, scope = format.is_conventional(message, args.types, args.optional_scope)
     if is_valid:
         # Check that scope is valid by running `pants list <scope>`
-        print("Scope: ", scope, " | Type:", type(scope))
         if scope:
             cmd = ["pants", "list", scope]
             try:
@@ -74,13 +73,8 @@ See {Colors.LBLUE}https://git-scm.com/docs/git-commit/#_discussion{Colors.RESTOR
             if exit_code != 0:
                 print(
                     f"""
-        {Colors.YELLOW}[WARNING] >>{Colors.RESTORE} The scope `{Colors.LRED}{scope}{Colors.RESTORE}` doesn't seem to be a valid `pants list` scope.
-
-Are you sure that you want to continue ? [y/N]""")
-                user_input = input()
-                if user_input.lower() != "y":
-                    print("Aborting commit...")
-                    return RESULT_FAIL
+        {Colors.YELLOW}[WARNING] >>{Colors.LRED} The scope `{scope}` doesn't seem to be a valid `pants list` scope.{Colors.RESTORE}
+""")
         return RESULT_SUCCESS
     else:
         print(
