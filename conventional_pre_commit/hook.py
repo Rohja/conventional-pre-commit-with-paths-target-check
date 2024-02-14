@@ -7,7 +7,6 @@ import subprocess
 RESULT_SUCCESS = 0
 RESULT_FAIL = 1
 
-
 class Colors:
     LBLUE = "\033[00;34m"
     LRED = "\033[01;31m"
@@ -20,6 +19,9 @@ def main(argv=[]):
         prog="conventional-pre-commit", description="Check a git commit message for Conventional Commits formatting."
     )
     parser.add_argument("types", type=str, nargs="*", default=format.DEFAULT_TYPES, help="Optional list of types to support")
+    parser.add_argument(
+        "--extra-scopes", type=str, nargs="*", default=[], dest="extra_allowed_scopes", help="Optional list of extra scope to allow (that are not pants targets)"
+    )
     parser.add_argument("input", type=str, help="A file containing a git commit message")
     parser.add_argument(
         "--force-scope", action="store_false", default=True, dest="optional_scope", help="Force commit to have scope defined."
@@ -61,20 +63,29 @@ See {Colors.LBLUE}https://git-scm.com/docs/git-commit/#_discussion{Colors.RESTOR
     if is_valid:
         # Check that scope is valid by running `pants list <scope>`
         if scope:
-            cmd = ["pants", "list", scope]
-            try:
-                result = subprocess.run(cmd)
-            except FileNotFoundError:
-                print(f"""
+            is_valid_scope = False
+            if scope in args.extra_allowed_scopes:
+                is_valid_scope = True
+            else:
+                # Check if the scope is a valid pants target
+                cmd = ["pants", "list", scope]
+                try:
+                    result = subprocess.run(cmd)
+                except FileNotFoundError:
+                    print(f"""
         {Colors.LRED}[Error] >>{Colors.RESTORE} Pants binary was not found, are you sure it's installed and in PATH?""")
-                return RESULT_FAIL
-            # Get the exit code
-            exit_code = result.returncode
-            if exit_code != 0:
+                    return RESULT_FAIL
+                # Get the exit code
+                if result.returncode == 0:
+                    is_valid_scope = True
+
+            if not is_valid_scope:
                 print(
                     f"""
         {Colors.YELLOW}[WARNING] >>{Colors.LRED} The scope `{scope}` doesn't seem to be a valid `pants list` scope.{Colors.RESTORE}
+        NOTE: It's not in the allowed extra scopes neither, those are: {Colors.LBLUE}{Colors.RESTORE}
 """)
+                return RESULT_FAIL
         return RESULT_SUCCESS
     else:
         print(
