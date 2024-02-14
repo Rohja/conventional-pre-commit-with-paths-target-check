@@ -58,9 +58,9 @@ See {Colors.LBLUE}https://git-scm.com/docs/git-commit/#_discussion{Colors.RESTOR
             return RESULT_SUCCESS
 
     is_valid, scope = format.is_conventional(message, args.types, args.optional_scope)
-    print(is_valid, scope)
     if is_valid:
         # Check that scope is valid by running `pants list <scope>`
+        print("Scope: ", scope, " | Type:", type(scope))
         if scope:
             cmd = ["pants", "list", scope]
             try:
