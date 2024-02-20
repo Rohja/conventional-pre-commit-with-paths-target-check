@@ -83,6 +83,8 @@ def is_conventional(input, types=DEFAULT_TYPES, optional_scope=True):
     regex = re.compile(pattern, re.MULTILINE)
 
     result = regex.match(input)
+    if not result:
+        return False, None
     scope = result.group("scope")
 
     is_valid = (bool(result), scope)
